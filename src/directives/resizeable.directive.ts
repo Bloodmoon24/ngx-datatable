@@ -47,7 +47,6 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
     this.resizing = false;
 
     if (this.clickedTimeout) {
-      console.log('Double click');
       this.resize.emit(this.getSuggestedColumnWidth());
       this.clickedTimeout = null;
       return;
@@ -56,7 +55,6 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
           clearTimeout(this.clickedTimeout);
           this.clickedTimeout = null;
         }, ResizeableDirective.doubleClickTimeout);
-        console.log('Single click');
     }
 
     if (this.subscription && !this.subscription.closed) {
@@ -113,6 +111,7 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
       const rows = this.element.parentNode.parentNode.parentNode.nextElementSibling.querySelectorAll("datatable-body-row");
       let maxWidth = 0;
       let parentPadding = 0;
+
       for (const row of rows) {
           const cells = row.querySelectorAll('datatable-body-cell');
           const cell = cells[columnIndex];
