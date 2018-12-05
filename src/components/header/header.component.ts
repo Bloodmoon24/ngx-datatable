@@ -186,6 +186,8 @@ export class DataTableHeaderComponent {
       width = column.maxWidth;
     }
 
+    console.log('Column resized');
+
     this.resize.emit({
       column,
       prevValue: column.width,

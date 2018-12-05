@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { Observable, Subscription, fromEvent } from 'rxjs';
 import { MouseEvent } from '../events';
-import { takeUntil } from 'rxjs/operators';
+import { max, takeUntil } from 'rxjs/operators';
 
 @Directive({
   selector: '[resizeable]',
@@ -12,16 +12,17 @@ import { takeUntil } from 'rxjs/operators';
   }
 })
 export class ResizeableDirective implements OnDestroy, AfterViewInit {
-
   @Input() resizeEnabled: boolean = true;
   @Input() minWidth: number;
   @Input() maxWidth: number;
 
   @Output() resize: EventEmitter<any> = new EventEmitter();
+  static doubleClickTimeout = 250;
 
   element: HTMLElement;
   subscription: Subscription;
   resizing: boolean = false;
+  clickedTimeout;
 
   constructor(element: ElementRef, private renderer: Renderer2) {
     this.element = element.nativeElement;
@@ -44,6 +45,19 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
 
   onMouseup(): void {
     this.resizing = false;
+
+    if (this.clickedTimeout) {
+      console.log('Double click');
+      this.resize.emit(this.getSuggestedColumnWidth());
+      this.clickedTimeout = null;
+      return;
+    } else {
+        this.clickedTimeout = setTimeout(() => {
+          clearTimeout(this.clickedTimeout);
+          this.clickedTimeout = null;
+        }, ResizeableDirective.doubleClickTimeout);
+        console.log('Single click');
+    }
 
     if (this.subscription && !this.subscription.closed) {
       this._destroySubscription();
@@ -92,4 +106,25 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
     }
   }
 
+  private getSuggestedColumnWidth(): number {
+      const columnIndex = Array.from(this.element.parentNode.children).indexOf(this.element);
+      // Section index i. e. left/center/right
+      // const sectionIndex = Array.from(this.element.parentNode.parentNode.children).indexOf(this.element.parentNode),
+      const rows = this.element.parentNode.parentNode.parentNode.nextElementSibling.querySelectorAll("datatable-body-row");
+      let maxWidth = 0;
+      let parentPadding = 0;
+      for (const row of rows) {
+          const cells = row.querySelectorAll('datatable-body-cell');
+          const cell = cells[columnIndex];
+          const element = cell.querySelector('.datatable-body-cell-label');
+          const elementWidth = element.textContent ? element.scrollWidth : element.children[0].scrollWidth;
+
+          if (elementWidth > maxWidth) {
+              maxWidth = elementWidth;
+              parentPadding = cell.clientWidth - elementWidth;
+          }
+      }
+
+      return maxWidth + parentPadding + 1;
+  }
 }
