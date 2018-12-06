@@ -47,19 +47,18 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
     this.resizing = false;
 
     if (this.clickedTimeout) {
-      this.resize.emit(this.getSuggestedColumnWidth());
-      this.clickedTimeout = null;
-      return;
+        this._destroySubscription();
+        this.resize.emit(this.getSuggestedColumnWidth());
+        this.clickedTimeout = null;
     } else {
         this.clickedTimeout = setTimeout(() => {
           clearTimeout(this.clickedTimeout);
           this.clickedTimeout = null;
         }, this.doubleClickTimeout);
-    }
-
-    if (this.subscription && !this.subscription.closed) {
-      this._destroySubscription();
-      this.resize.emit(this.element.clientWidth);
+        if (this.subscription && !this.subscription.closed) {
+            this._destroySubscription();
+            this.resize.emit(this.element.clientWidth);
+        }
     }
   }
 
@@ -106,24 +105,37 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
 
   private getSuggestedColumnWidth(): number {
       const columnIndex = Array.from(this.element.parentNode.children).indexOf(this.element);
-      // Section index i. e. left/center/right
-      // const sectionIndex = Array.from(this.element.parentNode.parentNode.children).indexOf(this.element.parentNode),
-      const rows = (this.element.parentNode.parentNode.parentNode as HTMLElement)
-          .nextElementSibling.querySelectorAll('datatable-body-row');
+      const tableHeader = this.element.parentNode.parentNode.parentNode;
+      const tableClassList = Array.from((tableHeader.parentNode.parentNode as HTMLElement).classList);
+      const rows = (tableHeader as HTMLElement).nextElementSibling.querySelectorAll('datatable-body-row');
       let maxWidth = 0;
-      let parentPadding = 0;
 
       for (const row of Array.from(rows)) {
-          const cells = row.querySelectorAll('datatable-body-cell');
+          const rowCenter = row.querySelector('.datatable-row-center');
+
+          if (!rowCenter) {
+            continue;
+          }
+
+          const cells = rowCenter.querySelectorAll('datatable-body-cell');
           const cell = cells[columnIndex];
           const element = cell.querySelector('.datatable-body-cell-label');
-          const elementWidth = element.textContent ? element.scrollWidth : element.children[0].scrollWidth;
+          const elementWidth = element.children.length ? element.children[0].scrollWidth : element.clientWidth;
 
           if (elementWidth > maxWidth) {
               maxWidth = elementWidth;
-              parentPadding = cell.clientWidth - elementWidth;
           }
       }
-      return maxWidth + parentPadding + 1;
+      return this.getPadding(tableClassList) * 2 + maxWidth + 1;
+  }
+
+  private getPadding(classList: string[]): number {
+      if (classList.indexOf('compact') > -1) {
+         return 2;
+      } else if (classList.indexOf('dense') > -1) {
+         return 10;
+      } else {
+         return 13;
+      }
   }
 }

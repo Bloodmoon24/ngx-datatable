@@ -40,19 +40,19 @@ var ResizeableDirective = /** @class */ (function () {
         var _this = this;
         this.resizing = false;
         if (this.clickedTimeout) {
+            this._destroySubscription();
             this.resize.emit(this.getSuggestedColumnWidth());
             this.clickedTimeout = null;
-            return;
         }
         else {
             this.clickedTimeout = setTimeout(function () {
                 clearTimeout(_this.clickedTimeout);
                 _this.clickedTimeout = null;
             }, this.doubleClickTimeout);
-        }
-        if (this.subscription && !this.subscription.closed) {
-            this._destroySubscription();
-            this.resize.emit(this.element.clientWidth);
+            if (this.subscription && !this.subscription.closed) {
+                this._destroySubscription();
+                this.resize.emit(this.element.clientWidth);
+            }
         }
     };
     ResizeableDirective.prototype.onMousedown = function (event) {
@@ -89,24 +89,36 @@ var ResizeableDirective = /** @class */ (function () {
     };
     ResizeableDirective.prototype.getSuggestedColumnWidth = function () {
         var columnIndex = Array.from(this.element.parentNode.children).indexOf(this.element);
-        // Section index i. e. left/center/right
-        // const sectionIndex = Array.from(this.element.parentNode.parentNode.children).indexOf(this.element.parentNode),
-        var rows = this.element.parentNode.parentNode.parentNode
-            .nextElementSibling.querySelectorAll('datatable-body-row');
+        var tableHeader = this.element.parentNode.parentNode.parentNode;
+        var tableClassList = Array.from(tableHeader.parentNode.parentNode.classList);
+        var rows = tableHeader.nextElementSibling.querySelectorAll('datatable-body-row');
         var maxWidth = 0;
-        var parentPadding = 0;
         for (var _i = 0, _a = Array.from(rows); _i < _a.length; _i++) {
             var row = _a[_i];
-            var cells = row.querySelectorAll('datatable-body-cell');
+            var rowCenter = row.querySelector('.datatable-row-center');
+            if (!rowCenter) {
+                continue;
+            }
+            var cells = rowCenter.querySelectorAll('datatable-body-cell');
             var cell = cells[columnIndex];
             var element = cell.querySelector('.datatable-body-cell-label');
-            var elementWidth = element.textContent ? element.scrollWidth : element.children[0].scrollWidth;
+            var elementWidth = element.children.length ? element.children[0].scrollWidth : element.clientWidth;
             if (elementWidth > maxWidth) {
                 maxWidth = elementWidth;
-                parentPadding = cell.clientWidth - elementWidth;
             }
         }
-        return maxWidth + parentPadding + 1;
+        return this.getPadding(tableClassList) * 2 + maxWidth + 1;
+    };
+    ResizeableDirective.prototype.getPadding = function (classList) {
+        if (classList.indexOf('compact') > -1) {
+            return 2;
+        }
+        else if (classList.indexOf('dense') > -1) {
+            return 10;
+        }
+        else {
+            return 13;
+        }
     };
     __decorate([
         core_1.Input(),

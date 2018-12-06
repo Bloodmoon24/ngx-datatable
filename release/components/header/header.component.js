@@ -133,7 +133,6 @@ var DataTableHeaderComponent = /** @class */ (function () {
         else if (width >= column.maxWidth) {
             width = column.maxWidth;
         }
-        console.log('Column resized');
         this.resize.emit({
             column: column,
             prevValue: column.width,

@@ -19,4 +19,5 @@ export declare class ResizeableDirective implements OnDestroy, AfterViewInit {
     move(event: MouseEvent, initialWidth: number, mouseDownScreenX: number): void;
     private _destroySubscription;
     private getSuggestedColumnWidth;
+    private getPadding;
 }
