@@ -17,12 +17,12 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
   @Input() maxWidth: number;
 
   @Output() resize: EventEmitter<any> = new EventEmitter();
-  static doubleClickTimeout = 250;
 
   element: HTMLElement;
   subscription: Subscription;
   resizing: boolean = false;
   clickedTimeout;
+  doubleClickTimeout = 250;
 
   constructor(element: ElementRef, private renderer: Renderer2) {
     this.element = element.nativeElement;
@@ -54,7 +54,7 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
         this.clickedTimeout = setTimeout(() => {
           clearTimeout(this.clickedTimeout);
           this.clickedTimeout = null;
-        }, ResizeableDirective.doubleClickTimeout);
+        }, this.doubleClickTimeout);
     }
 
     if (this.subscription && !this.subscription.closed) {
@@ -108,11 +108,12 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
       const columnIndex = Array.from(this.element.parentNode.children).indexOf(this.element);
       // Section index i. e. left/center/right
       // const sectionIndex = Array.from(this.element.parentNode.parentNode.children).indexOf(this.element.parentNode),
-      const rows = this.element.parentNode.parentNode.parentNode.nextElementSibling.querySelectorAll("datatable-body-row");
+      const rows = (this.element.parentNode.parentNode.parentNode as HTMLElement)
+          .nextElementSibling.querySelectorAll('datatable-body-row');
       let maxWidth = 0;
       let parentPadding = 0;
 
-      for (const row of rows) {
+      for (const row of Array.from(rows)) {
           const cells = row.querySelectorAll('datatable-body-cell');
           const cell = cells[columnIndex];
           const element = cell.querySelector('.datatable-body-cell-label');
@@ -123,7 +124,6 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
               parentPadding = cell.clientWidth - elementWidth;
           }
       }
-
       return maxWidth + parentPadding + 1;
   }
 }
