@@ -1067,9 +1067,9 @@ var DataTableBodyRowComponent = /** @class */ (function () {
         return column.$$id;
     };
     DataTableBodyRowComponent.prototype.buildStylesByGroup = function () {
-        this._groupStyles['left'] = this.calcStylesByGroup('left');
-        this._groupStyles['center'] = this.calcStylesByGroup('center');
-        this._groupStyles['right'] = this.calcStylesByGroup('right');
+        this._groupStyles.left = this.calcStylesByGroup('left');
+        this._groupStyles.center = this.calcStylesByGroup('center');
+        this._groupStyles.right = this.calcStylesByGroup('right');
         this.cd.markForCheck();
     };
     DataTableBodyRowComponent.prototype.calcStylesByGroup = function (group) {
@@ -4808,6 +4808,7 @@ var DataTableHeaderComponent = /** @class */ (function () {
         else if (width >= column.maxWidth) {
             width = column.maxWidth;
         }
+        console.log('Column resized');
         this.resize.emit({
             column: column,
             prevValue: column.width,
@@ -4890,9 +4891,9 @@ var DataTableHeaderComponent = /** @class */ (function () {
         return sorts;
     };
     DataTableHeaderComponent.prototype.setStylesByGroup = function () {
-        this._styleByGroup['left'] = this.calcStylesByGroup('left');
-        this._styleByGroup['center'] = this.calcStylesByGroup('center');
-        this._styleByGroup['right'] = this.calcStylesByGroup('right');
+        this._styleByGroup.left = this.calcStylesByGroup('left');
+        this._styleByGroup.center = this.calcStylesByGroup('center');
+        this._styleByGroup.right = this.calcStylesByGroup('right');
         this.cd.detectChanges();
     };
     DataTableHeaderComponent.prototype.calcStylesByGroup = function (group) {
@@ -5776,6 +5777,7 @@ var ResizeableDirective = /** @class */ (function () {
         this.resizeEnabled = true;
         this.resize = new core_1.EventEmitter();
         this.resizing = false;
+        this.doubleClickTimeout = 250;
         this.element = element.nativeElement;
     }
     ResizeableDirective.prototype.ngAfterViewInit = function () {
@@ -5793,7 +5795,19 @@ var ResizeableDirective = /** @class */ (function () {
         this._destroySubscription();
     };
     ResizeableDirective.prototype.onMouseup = function () {
+        var _this = this;
         this.resizing = false;
+        if (this.clickedTimeout) {
+            this.resize.emit(this.getSuggestedColumnWidth());
+            this.clickedTimeout = null;
+            return;
+        }
+        else {
+            this.clickedTimeout = setTimeout(function () {
+                clearTimeout(_this.clickedTimeout);
+                _this.clickedTimeout = null;
+            }, this.doubleClickTimeout);
+        }
         if (this.subscription && !this.subscription.closed) {
             this._destroySubscription();
             this.resize.emit(this.element.clientWidth);
@@ -5830,6 +5844,27 @@ var ResizeableDirective = /** @class */ (function () {
             this.subscription.unsubscribe();
             this.subscription = undefined;
         }
+    };
+    ResizeableDirective.prototype.getSuggestedColumnWidth = function () {
+        var columnIndex = Array.from(this.element.parentNode.children).indexOf(this.element);
+        // Section index i. e. left/center/right
+        // const sectionIndex = Array.from(this.element.parentNode.parentNode.children).indexOf(this.element.parentNode),
+        var rows = this.element.parentNode.parentNode.parentNode
+            .nextElementSibling.querySelectorAll('datatable-body-row');
+        var maxWidth = 0;
+        var parentPadding = 0;
+        for (var _i = 0, _a = Array.from(rows); _i < _a.length; _i++) {
+            var row = _a[_i];
+            var cells = row.querySelectorAll('datatable-body-cell');
+            var cell = cells[columnIndex];
+            var element = cell.querySelector('.datatable-body-cell-label');
+            var elementWidth = element.textContent ? element.scrollWidth : element.children[0].scrollWidth;
+            if (elementWidth > maxWidth) {
+                maxWidth = elementWidth;
+                parentPadding = cell.clientWidth - elementWidth;
+            }
+        }
+        return maxWidth + parentPadding + 1;
     };
     __decorate([
         core_1.Input(),

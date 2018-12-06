@@ -9,6 +9,8 @@ export declare class ResizeableDirective implements OnDestroy, AfterViewInit {
     element: HTMLElement;
     subscription: Subscription;
     resizing: boolean;
+    clickedTimeout: any;
+    doubleClickTimeout: number;
     constructor(element: ElementRef, renderer: Renderer2);
     ngAfterViewInit(): void;
     ngOnDestroy(): void;
@@ -16,4 +18,5 @@ export declare class ResizeableDirective implements OnDestroy, AfterViewInit {
     onMousedown(event: MouseEvent): void;
     move(event: MouseEvent, initialWidth: number, mouseDownScreenX: number): void;
     private _destroySubscription;
+    private getSuggestedColumnWidth;
 }

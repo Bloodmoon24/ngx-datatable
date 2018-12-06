@@ -21,7 +21,7 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
   element: HTMLElement;
   subscription: Subscription;
   resizing: boolean = false;
-  clickedTimeout;
+  clickedTimeout: any;
   doubleClickTimeout = 250;
 
   constructor(element: ElementRef, private renderer: Renderer2) {
