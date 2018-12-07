@@ -120,7 +120,11 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
           const cells = rowCenter.querySelectorAll('datatable-body-cell');
           const cell = cells[columnIndex];
           const element = cell.querySelector('.datatable-body-cell-label');
-          const elementWidth = element.children.length ? element.children[0].scrollWidth : element.clientWidth;
+          let elementWidth = element.children.length ? element.children[0].scrollWidth : element.clientWidth;
+
+          if (!elementWidth) {
+              elementWidth = (element.children.length ? element.children[0] : element).getBoundingClientRect().width;
+          }
 
           if (elementWidth > maxWidth) {
               maxWidth = elementWidth;

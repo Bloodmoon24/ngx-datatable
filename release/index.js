@@ -1,5 +1,5 @@
 /**
- * angular2-data-table v"14.0.0" (https://github.com/swimlane/angular2-data-table)
+ * angular2-data-table v"14.0.3" (https://github.com/swimlane/angular2-data-table)
  * Copyright 2016
  * Licensed under MIT
  */
@@ -5860,6 +5860,9 @@ var ResizeableDirective = /** @class */ (function () {
             var cell = cells[columnIndex];
             var element = cell.querySelector('.datatable-body-cell-label');
             var elementWidth = element.children.length ? element.children[0].scrollWidth : element.clientWidth;
+            if (!elementWidth) {
+                elementWidth = (element.children.length ? element.children[0] : element).getBoundingClientRect().width;
+            }
             if (elementWidth > maxWidth) {
                 maxWidth = elementWidth;
             }

@@ -103,6 +103,9 @@ var ResizeableDirective = /** @class */ (function () {
             var cell = cells[columnIndex];
             var element = cell.querySelector('.datatable-body-cell-label');
             var elementWidth = element.children.length ? element.children[0].scrollWidth : element.clientWidth;
+            if (!elementWidth) {
+                elementWidth = (element.children.length ? element.children[0] : element).getBoundingClientRect().width;
+            }
             if (elementWidth > maxWidth) {
                 maxWidth = elementWidth;
             }
